@@ -27,8 +27,11 @@ export default{
     },
     methods: {
         ...mapMutations({
-            setSinger:'SET_SINGER'
+            setSinger: 'SET_SINGER'
         }),
+        /*setSinger(singer){    
+            this.$store.commit("SET_SINGER", singer);
+        },*/
         selectSinger(singer){
             this.$router.push({
                 path:`/singer/${singer.id}`
@@ -39,7 +42,6 @@ export default{
             getSingerList().then((res)=>{
                 if(res.code ==ERR_OK){
                     this.singers = this._normalizeSinger(res.data.list);
-                    console.log(24,this.singers)
                 }
             })
         },

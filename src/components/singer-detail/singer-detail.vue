@@ -1,46 +1,69 @@
 <template>
     <transition name="slide">
-        <div class="singer-detail"></div>
+        <music-list :title='title' :songs='songs' :bg-image='bgImage' ></music-list>
     </transition>
 </template>
 
 <script type="text/ecmascript-6">
+    import MusicList from 'components/music-list/music-list'
     import {mapGetters} from 'vuex'
+    import {ERR_OK} from 'api/config'
+    import {createSong} from 'common/js/song'
     import {getSingerDetail} from 'api/singer'
 
     export default {
         computed:{
+            bgImage(){
+                return this.singer.avatar
+            },
+            title(){
+                return this.singer.name
+            },
             ...mapGetters(['singer'])
+        },
+        components:{
+            MusicList
         },
         created(){
             this._getDetail();
         },
+        data(){
+            return{
+                songs:[]
+            }
+        },
         methods:{
             _getDetail(){
+                console.log(36,this.singer)
                 if(this.singer.id){
                     getSingerDetail(this.singer.id).then((res)=>{
-                        console.log(19,res)
+                        if(res.code == ERR_OK){
+                            this.songs =this._normalizeSongs(res.data.list);
+                            console.log(42,this.songs)
+                        }
                     }).catch( ()=>{
 
                     })
                 }else{
                     this.$router.push('/singer');
                 }
+            },
+            _normalizeSongs(list){
+                let ret = [];
+                list.forEach((item)=>{
+                    let {musicData} = item;
+                    if(musicData.songid && musicData.albummid){
+                        ret.push( createSong(musicData) )
+                    }
+                });
+                return ret;
             }
         }
     }
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
-.singer-detail
-    position:fixed
-    left:0
-    bottom:0
-    right:0
-    top:0
-    background:#fff;
-  .slide-enter-active, .slide-leave-active
-    transition: all 0.3s
+
 
   .slide-enter, .slide-leave-to
     transform: translate3d(100%, 0, 0)
