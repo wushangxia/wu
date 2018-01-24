@@ -1,6 +1,6 @@
 <template>
     <div class="music-list">
-        <div class="back" >
+        <div class="back" @click='back'>
             <i class="icon-back"></i>
         </div>
         <h1 class="title" v-html='title'></h1>
@@ -29,8 +29,12 @@
 <script type="text/ecmascript-6">
     import Scroll from 'base/scroll/scroll'
     import SongList from 'base/song-list/song-list'
+    import {prefixStyle} from 'common/js/dom'
     import Loading from 'base/loading/loading'
     const RESERVED_HEIGHT = 40
+    const transform = prefixStyle('transform');
+    console.log(36,transform)
+    const backdrop = prefixStyle('backdrop-filter')
     export default {
         props:{
             bgImage:{
@@ -55,6 +59,36 @@
             Loading,
             SongList
         },
+        watch:{
+            scrollY(newVal,oldVal){
+                let translateY = Math.max(this.minTransalteY,newVal);
+                let scale = 1
+                let zIndex = 0
+                let blur = 0
+                const percent = Math.abs(newVal/this.minTransalteY);
+                if(newVal >0){
+                    scale =1+percent;
+                    zIndex=10;
+                }else{
+                    blur = Math.min(20,percent*20);
+                }
+                this.$refs.layer.style[transform] = `translate3d(0,${translateY}px,0)`
+                this.$refs.filter.style[backdrop] = `blur(${blur}px)`
+                if(newVal < this.minTransalteY){
+                    this.$refs.playBtn.style.display = 'none';
+                    this.$refs.bgImage.style.paddingTop = 0
+                    this.$refs.bgImage.style.height = `${RESERVED_HEIGHT}px`
+                    zIndex = 10
+                }else{
+                    this.$refs.playBtn.style.display = '';
+                    this.$refs.bgImage.style.paddingTop = '70%'
+                    this.$refs.bgImage.style.height = 0
+                }
+                this.$refs.bgImage.style[transform] = `scale(${scale})`
+                this.$refs.bgImage.style.zIndex =zIndex;
+
+            }
+        },
         computed:{
             bgStyle(){
                 return `background-image:url(${this.bgImage})`
@@ -69,13 +103,25 @@
             this.probeType = 3;
             this.listenScroll =true;
         },
+        mounted(){
+            this.imageHeight = this.$refs.bgImage.clientHeight;
+            this.minTransalteY = -this.imageHeight +RESERVED_HEIGHT;
+            this.$refs.list.$el.style.top = `${this.imageHeight}px`;
+        },
         methods:{
             scroll(pos) {
                 this.scrollY = pos.y
             },
             selectItem(item,index){
-                
-            }
+                this.selectItem({
+                    list:this.songs,
+                    index:index
+                })
+            },
+            back(){
+                this.$router.back();
+            },
+            mapActions([selectItem])
         }
     }
 </script>
