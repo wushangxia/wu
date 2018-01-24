@@ -31,6 +31,7 @@
     import SongList from 'base/song-list/song-list'
     import {prefixStyle} from 'common/js/dom'
     import Loading from 'base/loading/loading'
+    import {mapActions} from 'vuex'
     const RESERVED_HEIGHT = 40
     const transform = prefixStyle('transform');
     console.log(36,transform)
@@ -113,7 +114,7 @@
                 this.scrollY = pos.y
             },
             selectItem(item,index){
-                this.selectItem({
+                this.selectPlay({
                     list:this.songs,
                     index:index
                 })
@@ -121,7 +122,7 @@
             back(){
                 this.$router.back();
             },
-            mapActions([selectItem])
+            ...mapActions(['selectPlay'])
         }
     }
 </script>
