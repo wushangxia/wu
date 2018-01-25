@@ -34,7 +34,6 @@
     import {mapActions} from 'vuex'
     const RESERVED_HEIGHT = 40
     const transform = prefixStyle('transform');
-    console.log(36,transform)
     const backdrop = prefixStyle('backdrop-filter')
     export default {
         props:{
@@ -117,7 +116,7 @@
                 this.selectPlay({
                     list:this.songs,
                     index:index
-                })
+                });
             },
             back(){
                 this.$router.back();

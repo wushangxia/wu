@@ -1,21 +1,25 @@
 <template>
   <div class="player" >
-    <transition name="normal">
+    <transition name="normal"
+        @enter="enter"
+        @after-enter="afterEnter"
+        @leave="leave"
+        @after-leave="afterLeave">
       <div class="normal-player"  v-show="fullScreen">
         <div class="background">
             <img width="100%" height="100%" :src="currentSong.image">
         </div>
         <div class="top">
-          <div class="back" >
+          <div class="back" @back='back'>
             <i class="icon-back"></i>
           </div>
           <h1 class="title" v-html="currentSong.name" ></h1>
-          <h2 class="subtitle" v-html = currentSong.singer></h2>
+          <h2 class="subtitle" v-html = 'currentSong.singer'></h2>
         </div>
         <div class="middle">
           <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd" >
+              <div class="cd" :class='cdCls'>
                 <img class="image" :src='currentSong.image'/>
               </div>
             </div>
@@ -46,13 +50,13 @@
             <div class="icon i-left" >
               <i ></i>
             </div>
-            <div class="icon i-left" >
+            <div class="icon i-left" :class='disableCls'>
               <i  class="icon-prev"></i>
             </div>
-            <div class="icon i-center" >
-              <i  ></i>
+            <div class="icon i-center" :class='disableCls' >
+              <i  :class='playIcon' @click='togglePlaying'></i>
             </div>
-            <div class="icon i-right" >
+            <div class="icon i-right" :class='disableCls' >
               <i class="icon-next"></i>
             </div>
             <div class="icon i-right">
@@ -65,32 +69,126 @@
     
     <transition name="mini" v-show='!fullScreen'>
       <div class="mini-player" >
-        <div class="icon">
-          <img  width="40" height="40" :src='currentSong.image' >
+        <div class="icon" >
+          <img  width="40" height="40" :src='currentSong.image' :class='cdCls'>
         </div>
         <div class="text">
-          <h2 class="name" ></h2>
-          <p class="desc" ></p>
+          <h2 class="name" v-html="currentSong.name"></h2>
+          <p class="desc" v-html="currentSong.singer"></p>
         </div>
-        <div class="control">
+        <div class="control" >
         </div>
         <div class="control" >
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-
+    <audio :src='currentSong.url' ref='audio'></audio>
   </div>
 </template>
 
 <script type="text/ecmascript-6">
     import  {prefixStyle} from 'common/js/dom'
     import {mapGetters, mapMutations, mapActions} from 'vuex'
-    /*const transform = prefixStyle('transform')
-    const transitionDuration = prefixStyle('transitionDuration')*/
+    import animations from 'create-keyframe-animation'
+    const transform = prefixStyle('transform')
+    const transitionDuration = prefixStyle('transitionDuration')
     export default{
+        watch:{
+            currentSong(newVal,oldVal){
+                if(!newVal.id == oldVal.id){
+                    return;
+                }
+                if(!newVal.id){
+                    return;
+                }
+                this.$nextTick(()=>{
+                    this.$refs.audio.play();
+                });
+            }
+        },
         computed:{
-            ...mapGetters(['playing','fullScreen','currentIndex','currentSong'])
+            ...mapGetters(['playing','fullScreen','currentIndex','currentSong']),
+            cdCls(){
+                return this.playing ? 'play' : 'play pause';
+            },
+            playIcon(){
+                return this.playing? 'icon-pause' : 'icon-play';
+            },
+            disableCls(){
+                return this.songReady ? '' : 'disable'
+            }
+        },
+        data(){
+            return{
+                songReady:false,
+                currentTime:0
+            }
+        },
+        created(){
+            this.touch = {};
+        },
+        methods:{
+            ...mapMutations({
+                setFullScreen:'SET_FULL_SCREEN'
+            }),
+            back(){
+                this.setFullScreen(false)
+            },
+            open(){
+                this.setFullScreen(true);
+            },
+            _getPosAndScale() {
+                const targetWidth = 40
+                const paddingLeft = 40
+                const paddingBottom = 30
+                const paddingTop = 80
+                const width = window.innerWidth * 0.8
+                const scale = targetWidth / width
+                const x = -(window.innerWidth / 2 - paddingLeft)
+                const y = window.innerHeight - paddingTop - width / 2 - paddingBottom
+                return {x,y,scale}
+            },
+            enter(el, done) {
+                const {x, y, scale} = this._getPosAndScale()
+
+                let animation = {
+                  0: {
+                    transform: `translate3d(${x}px,${y}px,0) scale(${scale})`
+                  },
+                  60: {
+                    transform: `translate3d(0,0,0) scale(1.1)`
+                  },
+                  100: {
+                    transform: `translate3d(0,0,0) scale(1)`
+                  }
+                }
+
+                animations.registerAnimation({
+                  name: 'move',
+                  animation,
+                  presets: {
+                    duration: 400,
+                    easing: 'linear'
+                  }
+                })
+
+                animations.runAnimation(this.$refs.cdWrapper, 'move', done)
+            },
+            afterEnter() {
+                animations.unregisterAnimation('move')
+                this.$refs.cdWrapper.style.animation = ''
+            },
+            leave(){
+                this.$refs.cdWrapper.style.transition = ' 1s all';
+                const {x , y , scale } = this._getPosAndScale;
+                this.$refs.cdWrapper.style[transform] = `translate3d(${x},${y},${scale}')`
+                this.$refs.cdWrapper.addEventListener('transitionend',end);
+            },
+            afterLeave(){
+                this.$refs.cdWrapper.style[transform] = '';
+                this.$refs.cdWrapper.style.transition = '';
+            }
         }
     }
 </script>

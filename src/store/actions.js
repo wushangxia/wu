@@ -2,7 +2,8 @@ import * as types from './mutation-types'
 import {playMode} from 'common/js/config'
 
 export const selectPlay = function({commit,state},{list,index}){
-	commit(types.SET_SEQUENCE_LIST,list);
+	/*commit(types.SET_SEQUENCE_LIST,list);*/
+	commit(types.SET_PLAYLIST,list);
 	if (state.mode === playMode.random){
 
 	}else{
