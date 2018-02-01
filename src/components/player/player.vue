@@ -27,13 +27,13 @@
               <div class="playing-lyric"></div>
             </div>
           </div>
-          <div class="middle-r" ref="lyricList" >
+          <scroll class="middle-r" ref="lyricList" :data='currentLyric && currentLyric.lines' >
             <div class="lyric-wrapper">
               <div >
                 <p ref="lyricLine" class="text"></p>
               </div>
             </div>
-          </div>
+          </scroll>
         </div>
         <div class="bottom">
           <div class="dot-wrapper">
@@ -47,8 +47,8 @@
             <span class="time time-r"></span>
           </div>
           <div class="operators">
-            <div class="icon i-left" >
-              <i ></i>
+            <div class="icon i-left" @click='changeMode'>
+              <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class='disableCls'>
               <i  class="icon-prev"></i>
@@ -60,7 +60,7 @@
               <i class="icon-next"></i>
             </div>
             <div class="icon i-right">
-              <i  class="icon" ></i>
+              <i  class="icon"  @click="toggleFavorite(currentSong)" :class="getFavoriteIcon(currentSong)" ></i>
             </div>
           </div>
         </div>
@@ -78,12 +78,12 @@
         </div>
         <div class="control" >
         </div>
-        <div class="control" >
+        <div class="control" @click.stop="showPlaylist">
           <i class="icon-playlist"></i>
         </div>
       </div>
     </transition>
-    <audio :src='currentSong.url' ref='audio'></audio>
+    <audio :src='currentSong.url' ref='audio' @ready= 'ready' @error = 'error' @timeupdate = 'updateTime'></audio>
   </div>
 </template>
 
@@ -91,9 +91,15 @@
     import  {prefixStyle} from 'common/js/dom'
     import {mapGetters, mapMutations, mapActions} from 'vuex'
     import animations from 'create-keyframe-animation'
+    import Lyric from 'lyric-parser'
+    import {playerMixin} from 'common/js/mixin'
+    import Scroll from 'base/scroll/scroll'
+
     const transform = prefixStyle('transform')
     const transitionDuration = prefixStyle('transitionDuration')
+
     export default{
+        mixins:[playerMixin],
         watch:{
             currentSong(newVal,oldVal){
                 if(!newVal.id == oldVal.id){
@@ -102,13 +108,23 @@
                 if(!newVal.id){
                     return;
                 }
-                this.$nextTick(()=>{
+
+                if(this.currentLyric){
+                    this.currentLyric.stop();
+                    this.currentTime = 0;
+                    this.playingLyric = '';
+                    this.currentLineNum = 0;
+                }
+                clearTimeout(this.timer)
+                this.timer = setTimeout(()=>{
                     this.$refs.audio.play();
-                });
+                    this.getLyric()
+                },1000)
+                
             }
         },
         computed:{
-            ...mapGetters(['playing','fullScreen','currentIndex','currentSong']),
+            ...mapGetters(['playing','fullScreen','currentIndex']),
             cdCls(){
                 return this.playing ? 'play' : 'play pause';
             },
@@ -122,8 +138,14 @@
         data(){
             return{
                 songReady:false,
+                songReady:false,
+                currentLyric:null,
+                playingLyric:'',
                 currentTime:0
             }
+        },
+        components:{
+            Scroll
         },
         created(){
             this.touch = {};
@@ -132,6 +154,7 @@
             ...mapMutations({
                 setFullScreen:'SET_FULL_SCREEN'
             }),
+            ...mapActions(['savePlayHistory']),
             back(){
                 this.setFullScreen(false)
             },
@@ -188,6 +211,79 @@
             afterLeave(){
                 this.$refs.cdWrapper.style[transform] = '';
                 this.$refs.cdWrapper.style.transition = '';
+            },
+            togglePlaying(){
+                if(this.songReady){
+                    return;
+                }
+                this.setPlayingState(!this.playing)
+            },
+            ready(){
+                this.songReady = true;
+                this.savePlayHistory(this.currentSong);
+            },
+            error(){
+                this.songReady = true;
+            },
+            updateTime(e){
+                this.currentTime = e.target.currentTime;
+            },
+            getLyric(){
+                this.currentSong.getLyric().then((lyric) =>{
+
+                }).catch(() =>{
+
+                })
+            },
+            prev(){ 
+                if(!this.songReady){
+                    return;
+                }
+                if(this.playlist.length === 1){
+                    this.loop();
+                    return;
+                }else{
+                    let index = this.currentIndex -1;
+                    if(index ==-1){
+                        index = this.playlist.length -1;
+                    }
+                    this.setCurrentIndex(index);
+                    if(!this.playing){
+                        this.togglePlaying();
+                    }
+                }
+                this.songReady =false;
+            },
+            next(){
+                if(!this.songReady){
+                    return;
+                }
+                if(this.playlist.length == 1){
+                    this.loop();
+                    return;
+                }else{
+                    index = this.currentIndex +1;
+                    if(index == this.playlist.length ){
+                        index =1;
+                    }
+                    this.setCurrentIndex(index);
+                    if(!this.playing){
+                        this.togglePlaying()
+                    }
+                }
+                this.songReady =false;
+            },
+            loop(){
+                this.$refs.audio.currentTime = 0;
+                this.$refs.auto.play();
+                this.setPlayingState(true);
+            },  
+            ready() {
+                this.songReady = true
+                this.savePlayHistory(this.currentSong)
+            },
+            error(){
+                this.songReady = true;
             }
         }
     }

@@ -20,6 +20,9 @@ const mutations = {
 	},
 	[types.SET_SEQUENCE_LIST](state,index){
 		state.sequenceList = index;
+	},
+	[types.SET_PLAY_HISTORY](state,history){
+		state.playHistory =history;
 	}
 }
 export default mutations
