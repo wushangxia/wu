@@ -18,7 +18,7 @@ function insertArray(arr,val,compare,maxLen){
         arr.splice(index,1);
     }
     arr.unshift(val);
-    if(maxLen&& maxLen.length > PLAY_MAX_LEN){
+    if(maxLen && arr.length > PLAY_MAX_LEN){
         arr.pop();
     }
 }
@@ -57,7 +57,7 @@ export function deleteFavorite(song){
 
 export function saveFavorite(song){
     let songs = storage.get(FAVORITE_KEY,[]);
-    insertArray(songs,(item) =>{
+    insertArray(songs,song,(item) =>{
         return item.id == song.id
     },FAVORITE_MAX_LEN)
     storage.set(FAVORITE_KEY,songs);

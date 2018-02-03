@@ -4,7 +4,7 @@ const mutations = {
 	    state.singer = singer
 	},
 	[types.SET_PLAYING_STATE](state,flag){
-		this.playing = flag;
+		state.playing = flag;
 	},
 	[types.SET_PLAYLIST](state,playlist){
 		state.playlist = playlist;
@@ -23,6 +23,9 @@ const mutations = {
 	},
 	[types.SET_PLAY_HISTORY](state,history){
 		state.playHistory =history;
+	},
+	[types.SET_FAVORITE_LIST](state,favoriteList){
+		state.favoriteList = favoriteList;
 	}
 }
 export default mutations

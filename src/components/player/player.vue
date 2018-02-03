@@ -24,7 +24,7 @@
               </div>
             </div>
             <div class="playing-lyric-wrapper">
-              <div class="playing-lyric"></div>
+              <div class="playing-lyric">{{playingLyric}}</div>
             </div>
           </div>
           <scroll class="middle-r" ref="lyricList" :data='currentLyric && currentLyric.lines' >
@@ -37,27 +37,28 @@
         </div>
         <div class="bottom">
           <div class="dot-wrapper">
-            <span class="dot" ></span>
-            <span class="dot" ></span>
+            <span class="dot" :class="{'active':currentShow==='cd'}"></span>
+            <span class="dot" :class="{'active':currentShow==='lyric'}"></span>
           </div>
           <div class="progress-wrapper">
-            <span class="time time-l"></span>
+            <span class="time time-l">{{format(currentTime)}}</span>
             <div class="progress-bar-wrapper">
+                <progress-bar :percent='percent' @percentChange='percentChange'></progress-bar>
             </div>
-            <span class="time time-r"></span>
+            <span class="time time-r">{{format(currentSong.duration)}}</span>
           </div>
           <div class="operators">
             <div class="icon i-left" @click='changeMode'>
               <i :class="iconMode"></i>
             </div>
             <div class="icon i-left" :class='disableCls'>
-              <i  class="icon-prev"></i>
+              <i  class="icon-prev" @click="prev"></i>
             </div>
             <div class="icon i-center" :class='disableCls' >
               <i  :class='playIcon' @click='togglePlaying'></i>
             </div>
             <div class="icon i-right" :class='disableCls' >
-              <i class="icon-next"></i>
+              <i class="icon-next" @click="next"></i>
             </div>
             <div class="icon i-right">
               <i  class="icon"  @click="toggleFavorite(currentSong)" :class="getFavoriteIcon(currentSong)" ></i>
@@ -83,7 +84,7 @@
         </div>
       </div>
     </transition>
-    <audio :src='currentSong.url' ref='audio' @ready= 'ready' @error = 'error' @timeupdate = 'updateTime'></audio>
+    <audio :src='currentSong.url' ref='audio' @play= 'ready' @error = 'error' @timeupdate = 'updateTime'></audio>
   </div>
 </template>
 
@@ -94,6 +95,7 @@
     import Lyric from 'lyric-parser'
     import {playerMixin} from 'common/js/mixin'
     import Scroll from 'base/scroll/scroll'
+    import progressBar from 'base/progress-bar/progress-bar'
 
     const transform = prefixStyle('transform')
     const transitionDuration = prefixStyle('transitionDuration')
@@ -118,7 +120,6 @@
                 clearTimeout(this.timer)
                 this.timer = setTimeout(()=>{
                     this.$refs.audio.play();
-                    this.getLyric()
                 },1000)
                 
             }
@@ -129,10 +130,16 @@
                 return this.playing ? 'play' : 'play pause';
             },
             playIcon(){
-                return this.playing? 'icon-pause' : 'icon-play';
+               return this.playing ? 'icon-pause' : 'icon-play'
+            },
+            miniIcon() {
+                return this.playing ? 'icon-pause-mini' : 'icon-play-mini'
             },
             disableCls(){
                 return this.songReady ? '' : 'disable'
+            },
+            percent(){
+                return this.currentTime /this.currentSong.duration
             }
         },
         data(){
@@ -141,11 +148,13 @@
                 songReady:false,
                 currentLyric:null,
                 playingLyric:'',
+                currentShow:'cd',
                 currentTime:0
             }
         },
         components:{
-            Scroll
+            Scroll,
+            progressBar
         },
         created(){
             this.touch = {};
@@ -213,7 +222,7 @@
                 this.$refs.cdWrapper.style.transition = '';
             },
             togglePlaying(){
-                if(this.songReady){
+                if(!this.songReady){
                     return;
                 }
                 this.setPlayingState(!this.playing)
@@ -262,9 +271,9 @@
                     this.loop();
                     return;
                 }else{
-                    index = this.currentIndex +1;
+                    let index = this.currentIndex +1;
                     if(index == this.playlist.length ){
-                        index =1;
+                        index =0;
                     }
                     this.setCurrentIndex(index);
                     if(!this.playing){
@@ -277,6 +286,20 @@
                 this.$refs.audio.currentTime = 0;
                 this.$refs.auto.play();
                 this.setPlayingState(true);
+            },
+            format(interval){
+                interval = interval|0;
+                let minute = interval /60|0;
+                let second = this._pad(interval % 60|0);
+                return  `${minute}m${second}s`;
+            },
+            _pad(num,n =2){
+                let len = num.toString().length;
+                while(len < n){
+                    num =  '0' +num
+                    len++;
+                }
+                return num;
             },  
             ready() {
                 this.songReady = true
@@ -284,6 +307,9 @@
             },
             error(){
                 this.songReady = true;
+            },
+            percentChange(percent){
+                console.log(312,percent)
             }
         }
     }

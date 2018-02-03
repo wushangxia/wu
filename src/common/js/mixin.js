@@ -19,12 +19,13 @@ export const playerMixin = {
     		const mode = (this.mode +1) %3;
     		this.setPlayMode(mode);
     		let list = null;
-    		if(mode == playMode.random){
-    			//list = shuffle(this.sequenceList);                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   )
-    		}else{
-    			//list = this.sequenceList;
-    		}
-    		this.setCurrentIndex(list);
+    		if (mode === playMode.random) {
+		        list = shuffle(this.sequenceList)
+		     } else {
+		        list = this.sequenceList
+		     }
+    		this.resetCurrentIndex(list);
+    		this.setPlaylist(list)
     	},
     	resetCurrentIndex(list){
     		let index = list.findIndex((item) =>{
