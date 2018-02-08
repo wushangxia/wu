@@ -33,7 +33,9 @@ export const savePlayHistory = function({commit,state},{song}){
 	commit(types.SET_PLAY_HISTORY,savePlay(song));
 }
 export const deleteFavoriteList = function({commit,state},song){
-	commit(types.SET_FAVORITE_LIST,deleteFavorite(song))
+	let songs = deleteFavorite(song);
+	console.log(37,songs)
+	commit(types.SET_FAVORITE_LIST,songs);
 }
 
 export const saveSearchHistory = function({commit,state},song){

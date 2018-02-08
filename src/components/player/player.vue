@@ -84,7 +84,7 @@
         </div>
       </div>
     </transition>
-    <audio :src='currentSong.url' ref='audio' @play= 'ready' @error = 'error' @timeupdate = 'updateTime'></audio>
+    <audio :src='currentSong.url' ref='audio' @play= 'ready' @error = 'error' @timeupdate='updateTime' @ended="end"></audio>
   </div>
 </template>
 
@@ -93,6 +93,7 @@
     import {mapGetters, mapMutations, mapActions} from 'vuex'
     import animations from 'create-keyframe-animation'
     import Lyric from 'lyric-parser'
+    import {playMode} from 'common/js/config'
     import {playerMixin} from 'common/js/mixin'
     import Scroll from 'base/scroll/scroll'
     import progressBar from 'base/progress-bar/progress-bar'
@@ -110,7 +111,7 @@
                 if(!newVal.id){
                     return;
                 }
-
+                console.log(114,newVal)
                 if(this.currentLyric){
                     this.currentLyric.stop();
                     this.currentTime = 0;
@@ -169,6 +170,13 @@
             },
             open(){
                 this.setFullScreen(true);
+            },
+            end(){
+                if(this.mode == playMode.loop){
+                    this.loop();
+                }else{
+                    this.next();
+                }
             },
             _getPosAndScale() {
                 const targetWidth = 40

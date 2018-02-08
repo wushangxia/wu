@@ -24,8 +24,8 @@ function insertArray(arr,val,compare,maxLen){
 }
 
 function deleteFromArray(arr,compare){
-    let songs = arr.findIndex(compare);
-    if(index >0){
+    let index = arr.findIndex(compare);
+    if(index >-1){
         arr.splice(index,1);
     }
 }
@@ -48,10 +48,12 @@ export function savePlay(song){
 
 export function deleteFavorite(song){
     let songs = storage.get(FAVORITE_KEY,[]);
+    console.log(84,songs.length);
     deleteFromArray(songs,(item) =>{
         return item.id == song.id
     })
     storage.set(FAVORITE_KEY,songs);
+      console.log(89,songs.length);
     return songs;
 }
 

@@ -44,7 +44,7 @@ export const playerMixin = {
     		let index = this.favoriteList.findIndex((item) =>{
     			return item.id == song.id
     		})
-    		return song >-1
+    		return index >-1
     	},
     	getFavoriteIcon(song){
     		if(this.isFavorite(song)){
@@ -58,7 +58,7 @@ export const playerMixin = {
 	      setCurrentIndex: 'SET_CURRENT_INDEX',
 	      setPlayingState: 'SET_PLAYING_STATE'
 	    }),
-	    ...mapActions(['saveSearchHistory'])
+	    ...mapActions(['saveSearchHistory','deleteFavoriteList'])
 
     }
 }
