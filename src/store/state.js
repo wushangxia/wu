@@ -9,6 +9,7 @@ const state = {
     mode:playMode.sequence,
     playHistory :loadPlay(),
     currentIndex:0,
+    topList:[],
     favoriteList:loadFavorite()
 }
 export default state

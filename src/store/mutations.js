@@ -26,6 +26,10 @@ const mutations = {
 	},
 	[types.SET_FAVORITE_LIST](state,favoriteList){
 		state.favoriteList = favoriteList;
-	}
+	},
+	[types.SET_TOP_LIST](state, topList) {
+		console.log(32,topList)
+	    state.topList = topList;
+	 }
 }
 export default mutations

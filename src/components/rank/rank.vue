@@ -1,11 +1,81 @@
 <template>
-  <div class="rank" ref="rank">
-rank
-  </div>
+    <div class="rank" ref="rank">
+        <scroll :data='topList'  class="toplist" ref="toplist">
+            <ul>
+                <li @click="selectItem(item)" class="item" v-for="item in topList">
+                    <div class="icon">
+                        <img width="100" height="100" v-lazy="item.picUrl"/>
+                    </div>
+                    <ul class="songlist">
+                        <li class="song" v-for="(song,index) in item.songList">
+                          <span>{{index + 1}}</span>
+                          <span>{{song.songname}}-{{song.singername}}</span>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+            <div class="loading-container" v-show="!topList.length">
+                <loading></loading>
+            </div>
+        </scroll>
+        <router-view></router-view>
+    </div>
 </template>
 
 <script type="text/ecmascript-6">
-export default{}
+import Scroll from 'base/scroll/scroll'
+import Loading from 'base/loading/loading'
+import {getTopList} from 'api/rank'
+import {ERR_OK} from 'api/config'
+import {playlistMixin} from 'common/js/mixin'
+import {mapMutations} from 'vuex'
+
+export default{
+    mixins: [playlistMixin],  
+    components:{
+        Scroll,
+        Loading
+    },
+    created(){
+        this._getTopList();
+    },
+    data(){
+        return{
+            topList:[]
+        }
+    },
+    watch:{
+        getTopList(){
+            setTimeout(() => {
+              this.$Lazyload.lazyLoadHandler()
+            }, 20)
+        }
+    },
+    methods:{
+        handlePlaylist(playlist) {
+            const bottom = playlist.length > 0 ? '60px' : ''
+            console.log(56111,bottom)
+            this.$refs.rank.style.bottom = bottom
+            this.$refs.toplist.refresh()
+        },
+        _getTopList(){
+            getTopList().then((res) =>{
+                if(res.code == ERR_OK){
+                    this.topList = res.data.topList
+                }
+            })
+        },
+        selectItem(item){
+            this.$router.push({
+                path:`/rank/${item.id}`
+            });
+            this.setTopList(item);
+        },
+        ...mapMutations({
+        setTopList: 'SET_TOP_LIST'
+      })
+    }
+}
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">
