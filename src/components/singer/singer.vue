@@ -29,9 +29,12 @@ export default{
         ...mapMutations({
             setSinger: 'SET_SINGER'
         }),
-        /*setSinger(singer){    
-            this.$store.commit("SET_SINGER", singer);
-        },*/
+        selectSinger(singer) {
+            this.$router.push({
+              path: `/singer/${singer.id}`
+            })
+            this.setSinger(singer)
+        },
         selectSinger(singer){
             this.$router.push({
                 path:`/singer/${singer.id}`

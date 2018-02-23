@@ -67,7 +67,7 @@
         </div>
       </div>
     </transition>
-    
+
     <transition name="mini" v-show='!fullScreen'>
       <div class="mini-player" >
         <div class="icon" >
@@ -84,7 +84,7 @@
         </div>
       </div>
     </transition>
-    <audio :src='currentSong.url' ref='audio' @play= 'ready' @error = 'error' @timeupdate='updateTime' @ended="end"></audio>
+    <audio :src="currentSong.url" ref='audio' @play= 'ready' @error = 'error' @timeupdate='updateTime' @ended="end"></audio>
   </div>
 </template>
 
@@ -111,7 +111,6 @@
                 if(!newVal.id){
                     return;
                 }
-                console.log(114,newVal)
                 if(this.currentLyric){
                     this.currentLyric.stop();
                     this.currentTime = 0;
@@ -122,7 +121,7 @@
                 this.timer = setTimeout(()=>{
                     this.$refs.audio.play();
                 },1000)
-                
+
             }
         },
         computed:{
@@ -246,13 +245,21 @@
                 this.currentTime = e.target.currentTime;
             },
             getLyric(){
-                this.currentSong.getLyric().then((lyric) =>{
-
-                }).catch(() =>{
-
-                })
+                this.currentSong.getLyric().then((lyric) => {
+                    if (this.currentSong.lyric !== lyric) {
+                        return
+                    }
+                    this.currentLyric = new Lyric(lyric, this.handleLyric)
+                    if (this.playing) {
+                        this.currentLyric.play()
+                    }
+                    }).catch(() => {
+                    this.currentLyric = null
+                    this.playingLyric = ''
+                    this.currentLineNum = 0
+                    })
             },
-            prev(){ 
+            prev(){
                 if(!this.songReady){
                     return;
                 }
@@ -308,7 +315,7 @@
                     len++;
                 }
                 return num;
-            },  
+            },
             ready() {
                 this.songReady = true
                 this.savePlayHistory(this.currentSong)

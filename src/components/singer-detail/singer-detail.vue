@@ -34,12 +34,10 @@
         },
         methods:{
             _getDetail(){
-                console.log(36,this.singer)
                 if(this.singer.id){
                     getSingerDetail(this.singer.id).then((res)=>{
                         if(res.code == ERR_OK){
                             this.songs =this._normalizeSongs(res.data.list);
-                            console.log(42,this.songs)
                         }
                     }).catch( ()=>{
 

@@ -31,7 +31,7 @@ import {playlistMixin} from 'common/js/mixin'
 import {mapMutations} from 'vuex'
 
 export default{
-    mixins: [playlistMixin],  
+    mixins: [playlistMixin],
     components:{
         Scroll,
         Loading
@@ -54,7 +54,6 @@ export default{
     methods:{
         handlePlaylist(playlist) {
             const bottom = playlist.length > 0 ? '60px' : ''
-            console.log(56111,bottom)
             this.$refs.rank.style.bottom = bottom
             this.$refs.toplist.refresh()
         },
@@ -72,8 +71,8 @@ export default{
             this.setTopList(item);
         },
         ...mapMutations({
-        setTopList: 'SET_TOP_LIST'
-      })
+          setTopList: 'SET_TOP_LIST'
+        })
     }
 }
 </script>
