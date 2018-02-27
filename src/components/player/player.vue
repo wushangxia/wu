@@ -10,16 +10,19 @@
             <img width="100%" height="100%" :src="currentSong.image">
         </div>
         <div class="top">
-          <div class="back" @back='back'>
+          <div class="back" @click='back'>
             <i class="icon-back"></i>
           </div>
           <h1 class="title" v-html="currentSong.name" ></h1>
           <h2 class="subtitle" v-html = 'currentSong.singer'></h2>
         </div>
-        <div class="middle">
+        <div class="middle"
+            @touchstart.prevent="middleTouchStart"
+            @touchmove.prevent="middleTouchMove"
+            @touchend="middleTouchEnd">
           <div class="middle-l" ref="middleL">
             <div class="cd-wrapper" ref="cdWrapper">
-              <div class="cd" :class='cdCls'>
+              <div class="cd" :class="cdCls">
                 <img class="image" :src='currentSong.image'/>
               </div>
             </div>
@@ -29,8 +32,11 @@
           </div>
           <scroll class="middle-r" ref="lyricList" :data='currentLyric && currentLyric.lines' >
             <div class="lyric-wrapper">
-              <div >
-                <p ref="lyricLine" class="text"></p>
+              <div v-if="currentLyric">
+                <p ref="lyricLine"
+                   class="text"
+                   :class="{'current': currentLineNum ===index}"
+                   v-for="(line,index) in currentLyric.lines">{{line.txt}}</p>
               </div>
             </div>
           </scroll>
@@ -119,7 +125,8 @@
                 }
                 clearTimeout(this.timer)
                 this.timer = setTimeout(()=>{
-                    this.$refs.audio.play();
+                    //this.$refs.audio.play();
+                    this.getLyric();
                 },1000)
 
             }
@@ -144,12 +151,13 @@
         },
         data(){
             return{
-                songReady:false,
-                songReady:false,
-                currentLyric:null,
-                playingLyric:'',
-                currentShow:'cd',
-                currentTime:0
+                songReady: false,
+                currentTime: 0,
+                radius: 32,
+                currentLyric: null,
+                currentLineNum: 0,
+                currentShow: 'cd',
+                playingLyric: ''
             }
         },
         components:{
@@ -165,7 +173,8 @@
             }),
             ...mapActions(['savePlayHistory']),
             back(){
-                this.setFullScreen(false)
+                this.setFullScreen(false);
+                this.$router.push('/singer')
             },
             open(){
                 this.setFullScreen(true);
@@ -218,11 +227,11 @@
                 animations.unregisterAnimation('move')
                 this.$refs.cdWrapper.style.animation = ''
             },
-            leave(){
+            leave(el, done){
                 this.$refs.cdWrapper.style.transition = ' 1s all';
                 const {x , y , scale } = this._getPosAndScale;
                 this.$refs.cdWrapper.style[transform] = `translate3d(${x},${y},${scale}')`
-                this.$refs.cdWrapper.addEventListener('transitionend',end);
+                this.$refs.cdWrapper.addEventListener('transitionend',done);
             },
             afterLeave(){
                 this.$refs.cdWrapper.style[transform] = '';
@@ -232,7 +241,10 @@
                 if(!this.songReady){
                     return;
                 }
-                this.setPlayingState(!this.playing)
+                this.setPlayingState(!this.playing);
+                if(this.currentLyric){
+                    this.currentLyric.togglePlaying();
+                }
             },
             ready(){
                 this.songReady = true;
@@ -243,6 +255,93 @@
             },
             updateTime(e){
                 this.currentTime = e.target.currentTime;
+            },
+            getLyric(){
+                this.currentSong.getLyric().then((lyric) =>{
+                    if(this.currentSong.lyric  !== lyric){
+                        return;
+                    }
+                    this.currentLyric = new Lyric(lyric, this.handleLyric)
+                    if(this.playing){
+                        this.currentLyric.play()
+                    }
+                }).catch(() =>{
+                    this.currentLyric = null;
+                    this.playingLyric = '';
+                    this.currentLineNum = 0;
+                })
+            },
+            handleLyric({lineNum, txt}){
+                this.currentLineNum = lineNum;
+                if(lineNum >5){
+                    let lineEl = this.$refs.lyricLine[lineNum -5];
+                    this.$refs.lyricList.scrollToElement(lineEl, 1000)
+                }else{
+                    this.$refs.lyricList.scrollTo(0, 0, 1000)
+                }
+                this.playingLyric = txt
+
+            },
+            middleTouchStart(e){
+                this.touch.initiated = true;
+                this.touch.move = false;
+                const touch = e.touches[0];
+                this.touch.startX = touch.pageX;
+                this.touch.startY = touch.pageY;
+            },
+            middleTouchMove(e){
+                if(!this.touch.initiated){
+                    return;
+                }
+                const touch = e.touches[0];
+                const deltaX = touch.pageX - this.touch.startX;
+                const deltaY = touch.pageY - this.touch.startY;
+                console.log(298,Math.abs(deltaY) > Math.abs(deltaX))
+                if(Math.abs(deltaY) > Math.abs(deltaX)){
+                    return;
+                }
+                if (!this.touch.moved) {
+                  this.touch.moved = true
+                }
+                const left = this.currentShow === 'cd' ? 0 : -window.innerWidth;
+                const offsetWidth = Math.min(0,Math.max(-window.innerWidth,left+deltaX));
+                this.touch.percent = Math.abs(offsetWidth / window.innerWidth);
+                this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`;
+                this.$refs.lyricList.$el.style[transitionDuration] = 0;
+                this.$refs.middleL.style.opacity = 1 - this.touch.percent
+                this.$refs.middleL.style[transitionDuration] = 0
+            },
+            middleTouchEnd() {
+                if (!this.touch.moved) {
+                  return
+                }
+                let offsetWidth
+                let opacity
+                if (this.currentShow === 'cd') {
+                  if (this.touch.percent > 0.1) {
+                    offsetWidth = -window.innerWidth
+                    opacity = 0
+                    this.currentShow = 'lyric'
+                  } else {
+                    offsetWidth = 0
+                    opacity = 1
+                  }
+                } else {
+                  if (this.touch.percent < 0.9) {
+                    offsetWidth = 0
+                    this.currentShow = 'cd'
+                    opacity = 1
+                  } else {
+                    offsetWidth = -window.innerWidth
+                    opacity = 0
+                  }
+                }
+                const time = 300
+                this.$refs.lyricList.$el.style[transform] = `translate3d(${offsetWidth}px,0,0)`
+                this.$refs.lyricList.$el.style[transitionDuration] = `${time}ms`
+                this.$refs.middleL.style.opacity = opacity
+                this.$refs.middleL.style[transitionDuration] = `${time}ms`
+                this.touch.initiated = false
             },
             getLyric(){
                 this.currentSong.getLyric().then((lyric) => {
@@ -301,6 +400,9 @@
                 this.$refs.audio.currentTime = 0;
                 this.$refs.auto.play();
                 this.setPlayingState(true);
+                if(this.currentLyric){
+                    this.currentLyric.seek(0);
+                }
             },
             format(interval){
                 interval = interval|0;

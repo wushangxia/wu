@@ -6,6 +6,7 @@ import Search from 'components/search/search'
 import Recommend from 'components/recommend/recommend'
 import SingerDetail from 'components/singer-detail/singer-detail'
 import TopList from 'components/top-list/top-list'
+import('components/singer-detail/singer-detail')
 
 Vue.use(Router)
 
@@ -23,7 +24,11 @@ export default new Router({
         }]
     },{
         'path':'/recommend',
-        'component':Recommend
+        'component':Recommend,
+        children:[{
+            path:':id',
+            component:SingerDetail
+        }]
     },{
         path: '/search',
         'component':Search

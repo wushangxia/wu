@@ -1,4 +1,4 @@
-<template>
+xtg<template>
   <div class="recommend" ref="recommend">
         <scroll class="recommend-content" :data="discList" ref="scroll">
             <div >
@@ -40,6 +40,7 @@ import Scroll from 'base/scroll/scroll'
 import Loading from 'base/loading/loading'
 import {getRecommend,getDiscList} from 'api/recommend'
 import {ERR_OK} from 'api/config'
+import {mapMutations} from 'vuex'
 export default{
     data(){
         return{
@@ -56,12 +57,21 @@ export default{
         Loading
     },
     methods:{
+        selectItem(item){
+            this.$router.push({
+                path:`/recommend/${item.dissid}/`
+            });
+            this.setDisc();
+        },
         loadImage(){
             if(!this.checkloaded){
                 this.$refs.scroll.refresh();
                 this.checkloaded =true;
             }
         },
+        ...mapMutations({
+            setDisc:'SET_DISC'
+        }),
         _getRecommend() {
             getRecommend().then((res) =>{
                 if(res.code == ERR_OK){

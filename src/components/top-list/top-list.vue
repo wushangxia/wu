@@ -1,11 +1,54 @@
 <template>
-  <div>
-    1234567
-  </div>
+    <transition name='slide'>
+        <music-list :rank="rank" :title="title" :bg-image="bgImage" :songs="songs"></music-list>
+    </transition>
 </template>
 
 <script type="text/ecmascript-6">
-export default{}
+import MusicList from 'components/music-list/music-list'
+import {ERR_OK} from 'api/config'
+import {getMusicList} from 'api/rank'
+import {mapGetters} from 'vuex'
+import {createSong} from 'common/js/song'
+
+export default{
+    computed:{
+        ...mapGetters(['topList'])
+    },
+    data() {
+        return {
+            songs: [],
+            rank: true
+        }
+    },
+    created(){
+        this._getMusicList();
+    },
+    methods:{
+        _getMusicList(){
+            if(!this.topList.id){
+                this.$router.push('/rank');
+                return;
+            }
+            this.getMusicList(this.topList.id).then((res) =>{
+                if(res.code == ERR_OK){
+                    this.songs = _this._normalizeSongs(res.songlist)
+                }
+
+            })
+
+        },
+        _normalizeSongs(songlist){
+            let ret = [];
+            songlist.forEach((item) =>{
+                if (musicData.songid && musicData.albummid) {
+                    ret.push(createSong(musicData))
+                  }
+            })
+            return ret;
+        }
+    }
+}
 </script>
 
 <style scoped lang="stylus" rel="stylesheet/stylus">

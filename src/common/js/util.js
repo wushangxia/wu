@@ -23,6 +23,7 @@ export function debounce(func, delay) {
       clearTimeout(timer)
     }
     timer = setTimeout(() => {
+      console.log(26,args)
       func.apply(this, args)
     }, delay)
   }

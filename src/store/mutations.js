@@ -16,6 +16,9 @@ const mutations = {
     [types.SET_PLAY_MODE](state,mode){
         state.mode = mode;
     },
+    [types.SET_DISC](state,playlist){
+        state.disc = playlist;
+    },
     [types.SET_CURRENT_INDEX](state,index){
         state.currentIndex =index;
     },
